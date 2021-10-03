@@ -57,7 +57,7 @@ Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
 
-""indent line setting
+""indentLine setting
 let g:indentLine_defaultGroup = 'SpecialKey'
 "let g:indentLine_color_term = 239
 
