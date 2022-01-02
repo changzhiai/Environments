@@ -54,7 +54,7 @@ module use /home/energy/jchang/modules/modules/all
 module load lrzsz/lrzsz   #lrzsz
 module load vesta/vesta-gtk3  #vesta
 module load vaspkit/vaspkit  #vaspkit
-#module load miniconda3  #miniconda3
+module load miniconda3  #miniconda3
 
 
 ###################### ase-vasp ####################
@@ -63,14 +63,13 @@ module load vaspkit/vaspkit  #vaspkit
 #ASE_VASP_COMMAND="mpiexec vasp_std"  #for Vasp2
 
 ################## ase-vasp & ase-gpaw ###############
-#module load VASP/5.4.4-intel-2019b
-#module load ASE/3.20.1-intel-2019b-Python-3.7.4
-#module load ASE
+module load VASP/5.4.4-intel-2019b
+module load ASE/3.20.1-intel-2019b-Python-3.7.4
 export ASE_VASP_VDW=/home/energy/modules/software/VASP/vasp-potpaw-5.4
 export VASP_PP_PATH=/home/energy/modules/software/VASP/vasp-potpaw-5.4/
 #export ASE_VASP_COMMAND="mpiexec vasp_std"  #for Vasp
 export ASE_VASP_COMMAND="mpiexec -n 24 vasp_std"  #for Vasp
-#module load GPAW/20.10.0-intel-2019b-ASE-3.20.1-Python-3.7.4
+module load GPAW/20.10.0-intel-2019b-ASE-3.20.1-Python-3.7.4
 #module load module load ASAP3/3.11.10-intel-2018b-ASE-3.18.0-Python-3.6.6
 #################################################
 
@@ -90,21 +89,3 @@ export PYTHONPATH=/home/energy/changai/software/vasp-python3:$PYTHONPATH
 export PATH=/home/energy/changai/software/vasp-python3/bin:$PATH
 
 export MESA_GL_VERSION_OVERRIDE=3.3 # for mayavi
-
-export PATH=/home/energy/changai/software/miniconda3/bin:$PATH
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-#__conda_setup="$('/home/energy/changai/software/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-#if [ $? -eq 0 ]; then
-    #eval "$__conda_setup"
-#else
-    #if [ -f "/home/energy/changai/software/miniconda3/etc/profile.d/conda.sh" ]; then
-        #. "/home/energy/changai/software/miniconda3/etc/profile.d/conda.sh"
-    #else
-        #export PATH="/home/energy/changai/software/miniconda3/bin:$PATH"
-    #fi
-#fi
-#unset __conda_setup
-# <<< conda initialize <<<
-
