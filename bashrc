@@ -23,6 +23,8 @@ LS_COLORS='no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;
 1:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm
 =01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:'
 
+alias emacs="emacs -nw"
+
 #alias sq='squeue -u changai'
 alias sq='~/bin/sq.sh'
 alias sqls='source ~/bin/sqls.sh'
@@ -95,16 +97,16 @@ export PATH=/home/energy/changai/software/miniconda3/bin:$PATH
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-#__conda_setup="$('/home/energy/changai/software/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-#if [ $? -eq 0 ]; then
-    #eval "$__conda_setup"
-#else
-    #if [ -f "/home/energy/changai/software/miniconda3/etc/profile.d/conda.sh" ]; then
-        #. "/home/energy/changai/software/miniconda3/etc/profile.d/conda.sh"
-    #else
-        #export PATH="/home/energy/changai/software/miniconda3/bin:$PATH"
-    #fi
-#fi
-#unset __conda_setup
+__conda_setup="$('/home/energy/changai/software/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/energy/changai/software/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/energy/changai/software/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/energy/changai/software/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
 # <<< conda initialize <<<
-
+conda deactivate
