@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Slurm: Update job time limit
+# Homepage: https://github.com/OleHolmNielsen/Slurm_tools/
+
+# Usage:
+# $0 -t timelimit job [jobs ...]
+
+SQUEUE_FORMAT=TimeLimit,State,JobID,Partition,UserName,GroupName,StartTime,EndTime,Name,Reason
+export SLURM_TIME_FORMAT=standard
+
+# Parse command options
+while getopts "t:h" options; do
+	case $options in
+		t )	export timelimit=$OPTARG
+			echo Set job timelimit to $timelimit
+			# ToDo: check if timelimit is less than current Runtime
+			;;
+		h | * )	echo "Usage:"
+			echo "$0 -t timelimit job [jobs ...]"
+			exit 1;;
+	esac
+done
+shift $((OPTIND-1))
+
+if test -n "$timelimit"
+then
+	JOBLIST="$*"
+	if test -z "$JOBLIST"
+	then
+		echo ERROR: $0: No job list provided
+		$0 -h
+		exit 1
+	elif ! [[ ${JOBLIST} =~ ^[0-9_,]+$ ]]
+	then
+		echo ERROR: Joblist does not look like jobids:
+		echo $JOBLIST
+		exit 1
+	fi
+	echo Job list: $JOBLIST
+	echo Current job status:
+	squeue -O "$SQUEUE_FORMAT" -j `echo $JOBLIST | sed 's/ /,/g'`
+	# Change timelimit of jobs
+	for j in $JOBLIST
+	do
+		scontrol update jobid=$j timelimit=$timelimit
+	done
+	echo New job status:
+	squeue -O "$SQUEUE_FORMAT" -j `echo $JOBLIST | sed 's/ /,/g'`
+else
+	echo "ERROR: timelimit must be specified"
+	$0 -h
+	exit 1
+fi

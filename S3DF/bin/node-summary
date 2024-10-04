@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# changzhi - 2024; inspired by Alex
+
+function allocated(){ squeue --noheader -p $1 -o "%D" -t PD| awk '{s+=$1} END {print s}' ; }
+function jobsqueue(){ squeue --noheader -p $1 -t PD| wc -l ; }
+function total(){ sinfo --noheader -o "%D" -p $1 ; }
+function distr() { sinfo --noheader -o "%A" -p $1 ; }
+
+echo -e "\nSummary of node usage on Perlmutter\n"
+
+for P in "system", "badger", "resv", "resv_shared", "realtime_ss11", "shared_realtime_ss11", "urgent_gpu_ss11", "urgent_milan_ss11", "shared_urgent_gpu_ss11", "cron", "workflow", "gpu_ss11", "regular_milan_ss11", "shared_gpu_ss11", "shared_milan_ss11"; do
+    echo -e "Partition:              \t"$P
+    tot="$(total $P)"
+    dist="$(distr $P)"
+    allo="$(allocated $P)"
+    jobs="$(jobsqueue $P)"
+    echo -e "Total number of nodes:  \t"$tot
+    echo -e "Allocated/idle nodes:   \t"$dist
+    echo -e "Number of jobs in queue:\t"$jobs
+    echo -e "Number of nodes in queue:\t"$allo
+    echo # Formatting, add blank line
+done
