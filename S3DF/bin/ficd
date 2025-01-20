@@ -1,8 +1,0 @@
-#!/bin/bash
-
-id=$1
-JOBDIR=$(showjob $id|grep '\/suncat\/changzhi')
-#JOBDIR=$(showjob $id| grep WorkDir|while IFS='=' read -r key value; do echo $value; done) ||JOBDIR=$(showjob $id|grep 'suncat\/changzhi')
-echo $JOBDIR
-cd $JOBDIR
-

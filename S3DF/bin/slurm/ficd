@@ -1,6 +1,0 @@
-#!/bin/bash
-
-id=$1
-JOBDIR=$(showjob $id|grep '\/home\/')
-cd $JOBDIR
-
