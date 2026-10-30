@@ -1,0 +1,47 @@
+#!/bin/bash
+# Summary of node and queue usage (PBS).
+#   hpc-summary [-n] [queue ...]
+#   -n      skip the node-state count (pbsnodes is slow on big systems)
+# Queues default to $HPC_SUMMARY_QUEUES, else every queue with jobs.
+# changzhi - 2024; inspired by Alex
+
+nodes=1
+[ "$1" = "-n" ] && { nodes=0; shift; }
+queues="${*:-$HPC_SUMMARY_QUEUES}"
+
+echo -e "\nSummary of node usage on ${ENV_SITE:-$(hostname -s)}\n"
+
+if [ $nodes = 1 ]; then
+    pbsnodes -aSj 2>/dev/null | awk 'NR > 3 {
+        s = $2; n++
+        if (s ~ /down|offline|unknown/) bad++
+        else if (s == "free") free++
+        else if (s ~ /job|resv/) busy++
+        else other++
+    } END {
+        printf "Nodes: %d total, %d busy, %d free, %d down/offline, %d other\n\n", n, busy, free, bad, other
+    }'
+fi
+
+# qstat -a -w columns: id user queue name sessid NDS TSK mem time S elap
+qstat -a -w 2>/dev/null | awk -v want="$queues" '
+    BEGIN { split(want, w, /[ ,]+/); for (i in w) if (w[i] != "") { keep[w[i]] = 1; nkeep++ } }
+    /^---/ { body = 1; next }
+    !body || NF < 10 { next }
+    {
+        q = $3; nd = ($6 ~ /^[0-9]+$/) ? $6 : 0; s = $10
+        if (nkeep && !(q in keep)) next
+        seen[q] = 1
+        if (s ~ /[REB]/)   { rj[q]++; rn[q] += nd; trj++; trn += nd }
+        else if (s == "Q") { qj[q]++; qn[q] += nd; tqj++; tqn += nd }
+        else               { hj[q]++; thj++ }
+    }
+    END {
+        fmt = "%-18s %8s %9s %8s %9s %8s\n"
+        printf fmt, "QUEUE", "RUN_JOBS", "RUN_NODES", "Q_JOBS", "Q_NODES", "HELD"
+        for (q in keep) seen[q] = 1
+        for (q in seen) printf fmt, q, rj[q]+0, rn[q]+0, qj[q]+0, qn[q]+0, hj[q]+0 | "sort"
+        close("sort")
+        printf fmt, "TOTAL", trj+0, trn+0, tqj+0, tqn+0, thj+0
+    }'
+echo

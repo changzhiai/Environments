@@ -2,6 +2,7 @@
 
 alias ll='ls -l'
 alias la='ls -la'
+alias node-summary='hpc-summary'
 
 export EDITOR="${EDITOR:-vim}"
 

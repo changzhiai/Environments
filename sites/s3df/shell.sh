@@ -26,3 +26,5 @@ export C_INCLUDE_PATH=$_libxc/include:$C_INCLUDE_PATH
 export LIBRARY_PATH=$_libxc/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$_libxc/lib:$LD_LIBRARY_PATH
 unset _libxc
+
+export HPC_SUMMARY_PARTITIONS="roma milano ampere turing"

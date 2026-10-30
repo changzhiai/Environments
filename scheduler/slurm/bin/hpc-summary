@@ -1,0 +1,42 @@
+#!/bin/bash
+# Summary of node and queue usage per partition (Slurm).
+#   hpc-summary [partition ...]
+# Partitions default to $HPC_SUMMARY_PARTITIONS, else every partition.
+# changzhi - 2024; inspired by Alex
+
+parts="${*:-$HPC_SUMMARY_PARTITIONS}"
+
+echo -e "\nSummary of node usage on ${ENV_SITE:-$(hostname -s)}\n"
+
+# sinfo %F = allocated/idle/other/total; squeue %P may be "p1,p2" for multi-partition jobs
+{
+    sinfo -h -s -o "N %R %F" 2>/dev/null
+    squeue -h -o "J %P %t %D" 2>/dev/null
+} | awk -v want="$parts" '
+    BEGIN { split(want, w, /[ ,]+/); for (i in w) if (w[i] != "") { keep[w[i]] = 1; nkeep++ } }
+    $1 == "N" {
+        p = $2; sub(/\*$/, "", p)
+        if (nkeep && !(p in keep)) next
+        split($3, f, "/"); seen[p] = 1
+        al[p] = f[1]; id[p] = f[2]; ot[p] = f[3]; to[p] = f[4]
+        next
+    }
+    $1 == "J" {
+        np = split($2, ps, ","); s = $3; nd = $4
+        for (i = 1; i <= np; i++) {
+            p = ps[i]
+            if (nkeep && !(p in keep)) continue
+            if (s == "R" || s == "CG") { rj[p]++; rn[p] += nd }
+            else if (s == "PD")        { pj[p]++; pn[p] += nd }
+        }
+        if (s == "R" || s == "CG") { trj++; trn += nd } else if (s == "PD") { tpj++; tpn += nd }
+    }
+    END {
+        fmt = "%-22s %6s %6s %6s %6s %8s %9s %8s %9s\n"
+        printf fmt, "PARTITION", "NODES", "ALLOC", "IDLE", "OTHER", "RUN_JOBS", "RUN_NODES", "PD_JOBS", "PD_NODES"
+        for (p in seen) printf fmt, p, to[p]+0, al[p]+0, id[p]+0, ot[p]+0, rj[p]+0, rn[p]+0, pj[p]+0, pn[p]+0 | "sort"
+        close("sort")
+        # partitions share nodes, so only jobs are totalled
+        if (!nkeep) printf fmt, "TOTAL", "-", "-", "-", "-", trj+0, trn+0, tpj+0, tpn+0
+    }'
+echo

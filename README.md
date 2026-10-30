@@ -55,8 +55,8 @@ common/                       loaded everywhere
   shell.sh                    aliases, EDITOR, cpot, VASP_EXE
   vim/vimrc  config/flake8  data/vdw_kernel.bindat
 scheduler/
-  slurm/{bin,shell.sh}        sq sqls sqr sqdir showjob showuserjobs ... ; sqcd/ficd functions
-  pbs/{bin,shell.sh}          sq sqls sqr sqdir pbsjobs ;                 sqcd/ficd functions
+  slurm/{bin,shell.sh}        sq sqls sqr sqdir hpc-summary showjob showuserjobs ... ; sqcd/ficd functions
+  pbs/{bin,shell.sh}          sq sqls sqr sqdir hpc-summary pbsjobs ;     sqcd/ficd functions
 sites/<name>/                 per-machine overrides
   shell.sh                    modules, conda, env vars
   bin/  templates/            extra tools, submit-script templates
@@ -74,6 +74,7 @@ PATH priority (highest first) is `local/bin` > `sites/$ENV_SITE/bin` > `schedule
 | `sqls` | list my jobs with their working directories |
 | `sqdir <id\|name>` | print a job's working directory |
 | `sqcd <id\|name>` / `ficd` | cd into a job's working directory |
+| `hpc-summary [-n] [partition\|queue ...]` | nodes and running/queued jobs per partition (Slurm) or queue (PBS); defaults come from `$HPC_SUMMARY_PARTITIONS` / `$HPC_SUMMARY_QUEUES`, `-n` (PBS) skips the slow node count. Alias: `node-summary` |
 | `ifsubmited` / `ifdirrunning` | is a job running from this directory (or below it)? |
 | `reset` | CONTCAR→POSCAR, then resubmit with `$ENV_SUBMIT_CMD` (copies `$ENV_SUBMIT_TEMPLATE` if there's no submit script here) |
 | `rma` / `rma -a` | delete VASP outputs (`-a` deletes the inputs too) |
