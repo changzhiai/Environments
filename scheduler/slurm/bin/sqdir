@@ -1,0 +1,13 @@
+#!/bin/bash
+# Print the working directory of a job (queued/running or finished).
+# Usage: sqdir <jobid|jobname>
+id=$1
+[ -n "$id" ] || { echo "Usage: $(basename "$0") <jobid|jobname>" >&2; exit 1; }
+if ! [[ $id =~ ^[0-9_]+$ ]]; then
+    id=$(squeue -u "$USER" -h -o "%i %j" | awk -v n="$id" '$2 ~ n {print $1; exit}')
+fi
+[ -n "$id" ] || { echo "No job matching '$1'" >&2; exit 1; }
+dir=$(scontrol show job "$id" 2>/dev/null | awk -F= '/WorkDir=/{print $2}')
+[ -n "$dir" ] || dir=$(sacct -j "$id" -nP -o WorkDir | head -1)
+[ -n "$dir" ] || { echo "Cannot find WorkDir for job $id" >&2; exit 1; }
+echo "$dir"

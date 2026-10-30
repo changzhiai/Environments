@@ -1,0 +1,5 @@
+#!/bin/bash
+# List my jobs with their working directories
+pbsjobs "$@" | while IFS=$'\t' read -r id name state queue nodes wall dir; do
+    printf '%10s %-26s %2s %-10s %4s %9s %s/\n' "$id" "$name" "$state" "$queue" "$nodes" "$wall" "${dir/#$HOME/\~}"
+done

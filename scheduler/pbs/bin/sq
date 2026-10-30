@@ -1,0 +1,3 @@
+#!/bin/bash
+# List my jobs
+qstat -u "$USER" -w "$@"

@@ -1,0 +1,9 @@
+#!/bin/bash
+# Is a job submitted from exactly the current directory?
+b=$(sqls | grep -- " ${PWD/#$HOME/\~}/$")
+if [ -n "$b" ]; then
+    echo 'submitted'
+    echo "$b"
+else
+    echo 'not submitted'
+fi

@@ -1,0 +1,9 @@
+#!/bin/bash
+# Is any of my jobs running in (or below) the current directory?
+b=$(sqls | grep -n -- "${PWD/#$HOME/\~}")
+if [ -n "$b" ]; then
+    echo 'submitted'
+    echo "$b"
+else
+    echo 'not submitted jobs in this directory'
+fi

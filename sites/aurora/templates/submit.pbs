@@ -1,0 +1,21 @@
+#!/bin/bash -l
+#PBS -l select=1
+#PBS -l walltime=01:00:00
+#PBS -l filesystems=flare:home
+#PBS -l place=scatter
+#PBS -q debug
+#PBS -A LitMinMatSci
+#PBS -N job
+#PBS -k doe
+#PBS -j oe
+set -e
+
+cd "${PBS_O_WORKDIR}"
+
+NNODES=$(sort -u "${PBS_NODEFILE}" | wc -l)
+NRANKS_PER_NODE=12   # one rank per GPU tile
+NTOTRANKS=$((NNODES * NRANKS_PER_NODE))
+
+module load frameworks
+
+mpiexec -n "${NTOTRANKS}" --ppn "${NRANKS_PER_NODE}" --cpu-bind depth -d 8 gpu_tile_compact.sh python3 run.py

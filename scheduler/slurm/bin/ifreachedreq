@@ -1,0 +1,22 @@
+#!/bin/bash
+# Check VASP convergence of my jobs since a date.
+# Usage: ifreachedreq 2024-01-01 [jobname-pattern]
+starttime=${1:?Usage: ifreachedreq YYYY-MM-DD [jobname]}
+pattern=${2:-vasp}
+
+ids=$(sacct --starttime "$starttime" -X -n -o JobID,JobName%50 | awk -v p="$pattern" '$2 ~ p {print $1}' | sort -u)
+
+unconverge=""
+for id in $ids; do
+    dir=$(sqdir "$id" 2>/dev/null) || continue
+    echo "== $id $dir"
+    if ! (cd "$dir" && grep -q "reached required" OUTCAR 2>/dev/null); then
+        unconverge+="$id "
+    fi
+done
+
+echo
+echo "Not converged: $unconverge"
+for id in $unconverge; do
+    sqdir "$id"
+done

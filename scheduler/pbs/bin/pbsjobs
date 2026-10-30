@@ -1,0 +1,30 @@
+#!/bin/bash
+# Print my PBS jobs, one per line (tab separated):
+#   id  name  state  queue  nodes  walltime  workdir
+# Usage: pbsjobs [-x] [jobid ...]   (-x: include finished jobs)
+hist=""
+if [ "$1" = -x ]; then hist=x; shift; fi
+if [ $# -eq 0 ]; then
+    set -- $(qselect -u "$USER" ${hist:+-x})
+    [ $# -eq 0 ] && exit 0
+fi
+qstat -f$hist "$@" 2>/dev/null |
+    # join wrapped continuation lines (they start with a tab)
+    awk 'NR>1 && /^\t/ {sub(/^\t/, ""); buf = buf $0; next} {if (NR>1) print buf; buf = $0} END {print buf}' |
+    awk -F' = ' '
+        function out() {
+            if (!id) return
+            if (!wd) { wd = ep; sub(/^[^:]*:/, "", wd); sub(/\/[^\/]*$/, "", wd) }
+            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", id, name, state, queue, nodes, wall, wd
+        }
+        /^Job Id:/ { out(); id = $0; sub(/^Job Id: /, "", id); sub(/\..*/, "", id)
+                     name = state = queue = nodes = wall = wd = ep = ""; next }
+        { k = $1; sub(/^ +/, "", k) }
+        k == "Job_Name"               { name = $2 }
+        k == "job_state"              { state = $2 }
+        k == "queue"                  { queue = $2 }
+        k == "Resource_List.nodect"   { nodes = $2 }
+        k == "Resource_List.walltime" { wall = $2 }
+        k == "Error_Path"             { ep = $2 }
+        k == "Variable_List"          { if (match($2, /PBS_O_WORKDIR=[^,]*/)) wd = substr($2, RSTART + 14, RLENGTH - 14) }
+        END { out() }'

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Remove VASP output files in the current directory.
+#   rma      remove outputs only
+#   rma -a   also remove inputs (INCAR KPOINTS POSCAR POTCAR)
+outputs=(ase-sort.dat CHG CHGCAR WAVECAR vdw_kernel.bindat XDATCAR time vasp.out vasprun.xml
+         mpi_job_slurm.log REPORT results OUTCAR OSZICAR EIGENVAL DOSCAR IBZKPT PCDAT run.err run.log)
+inputs=(INCAR KPOINTS POSCAR POTCAR)
+files=("${outputs[@]}")
+[ "$1" = -a ] && files+=("${inputs[@]}")
+rm -f "${files[@]}"

@@ -1,0 +1,17 @@
+#!/bin/bash
+# Restart a VASP relaxation from CONTCAR and resubmit.
+# Uses ./submit*.sh if present, else copies $ENV_SUBMIT_TEMPLATE.
+set -e
+shopt -s nullglob
+
+scripts=(submit*.sh submit*.pbs)
+if [ ${#scripts[@]} -eq 0 ]; then
+    tpl="${ENV_SUBMIT_TEMPLATE:-}"
+    [ -f "$tpl" ] || { echo "No submit script here and ENV_SUBMIT_TEMPLATE is not set" >&2; exit 1; }
+    cp "$tpl" .
+    scripts=("$(basename "$tpl")")
+fi
+
+cp POSCAR POSCAR.start
+cp CONTCAR POSCAR
+"${ENV_SUBMIT_CMD:?ENV_SUBMIT_CMD is not set}" "${scripts[0]}"

@@ -1,0 +1,6 @@
+#!/bin/bash
+# List my jobs with their working directories
+squeue -u "$USER" -h -o "%i %j %T %M %C" | while read -r id name state times cpus; do
+    dir=$(scontrol show job "$id" | awk -F= '/WorkDir=/{print $2}')
+    printf '%10s %-26s %8s %10s %4s %s/\n' "$id" "$name" "$state" "$times" "$cpus" "${dir/#$HOME/\~}"
+done

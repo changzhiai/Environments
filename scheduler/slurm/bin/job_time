@@ -1,0 +1,3 @@
+#!/bin/bash
+# Elapsed/start/end time of a job
+sacct -j "$1" --format=JobID,JobName,State,Elapsed,Start,End

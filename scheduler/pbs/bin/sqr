@@ -1,0 +1,3 @@
+#!/bin/bash
+# List my running jobs
+qstat -u "$USER" -w -r

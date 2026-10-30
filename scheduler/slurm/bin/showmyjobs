@@ -1,0 +1,3 @@
+#!/bin/bash
+# Account summary up to my line
+showuserjobs | sed "/$USER/q"

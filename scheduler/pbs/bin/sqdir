@@ -1,0 +1,12 @@
+#!/bin/bash
+# Print the working directory of a job (also finished ones, while PBS keeps history).
+# Usage: sqdir <jobid|jobname>
+id=$1
+[ -n "$id" ] || { echo "Usage: $(basename "$0") <jobid|jobname>" >&2; exit 1; }
+if [[ $id =~ ^[0-9]+(\[[0-9]*\])?(\..*)?$ ]]; then
+    dir=$(pbsjobs -x "$id" | cut -f7 | head -1)
+else
+    dir=$(pbsjobs | awk -F'\t' -v n="$id" '$2 ~ n {print $7; exit}')
+fi
+[ -n "$dir" ] || { echo "Cannot find working directory for job '$1'" >&2; exit 1; }
+echo "$dir"
