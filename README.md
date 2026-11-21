@@ -22,6 +22,17 @@ Options:
 
 Re-running is safe. `./uninstall.sh` reverses it and restores the backups.
 
+To update later: `git pull`. New scripts and `shell.sh` changes take effect in the next shell. Re-run `./install.sh` only if the detected site or scheduler should change.
+
+### On every new machine: set your git identity
+
+Without this, git invents an author email from the hostname (e.g. `changzhiai@aurora-uan-0009...`), and GitHub won't count those commits as yours:
+
+```bash
+git config --global user.name  "Changzhi Ai"
+git config --global user.email <email on your GitHub account>
+```
+
 ### What it does
 
 1. Adds this block to `~/.bashrc` (also `~/.zshrc` on macOS). It replaces any older copy of the block:
@@ -63,7 +74,32 @@ sites/<name>/                 per-machine overrides
 local/                        gitignored: machine-only binaries (local/bin) and secrets (local/shell.sh)
 ```
 
-PATH priority (highest first) is `local/bin` > `sites/$ENV_SITE/bin` > `scheduler/$ENV_SCHED/bin` > `common/bin`.
+PATH priority (highest first) is `local/bin` > `sites/$ENV_SITE/bin` > `scheduler/$ENV_SCHED/bin` > `common/bin`. The `shell.sh` files are sourced in the opposite order (common, scheduler, site, local), so later ones override earlier ones.
+
+### Sites
+
+| site | scheduler | what its `shell.sh` sets up |
+|---|---|---|
+| `aurora` | PBS | `submit.pbs` template, `hpc-summary` queue list |
+| `perlmutter` | Slurm | `VASP_EXE=vasp`, conda, `submit.sh` template, partition list; `check_logins`, `mq_cancel_iter` |
+| `s3df` | Slurm | `~/.profile.d`, python 3.8 aliases, EasyBuild modules, myqueue completion, libxc paths, partition list; `mq_cancel_all` |
+| `niflheim` | Slurm | modules (VESTA, vaspkit), ASE/VASP env, catmap, conda, many submit templates; `bsub.py`, `clease_*` |
+| `macos` | none | Homebrew, GNU coreutils/sed/grep/findutils ahead of the BSD ones |
+| `generic` | auto | nothing |
+
+### Environment variables
+
+| variable | set by | used by |
+|---|---|---|
+| `ENV_ROOT`, `ENV_OS`, `ENV_SITE`, `ENV_SCHED` | `~/.bashrc` block | everything |
+| `ENV_SUBMIT_CMD` | scheduler (`sbatch` / `qsub`) | `reset` |
+| `ENV_SUBMIT_TEMPLATE` | site | `reset` |
+| `VASP_EXE` (default `vasp_std`) | common, site | `run_vasp.py` |
+| `VASP_PP_PATH` | site | `cpot Pd H O` (concatenates POTCARs) |
+| `ENV_DATA` | common | points at `common/data` (`vdw_kernel.bindat`) |
+| `HPC_SUMMARY_PARTITIONS` / `HPC_SUMMARY_QUEUES` | site | `hpc-summary` |
+
+Anything only one machine needs (secrets, extra paths) goes in `local/shell.sh`, which is gitignored.
 
 ### Job commands (same names on Slurm and PBS)
 
@@ -74,10 +110,36 @@ PATH priority (highest first) is `local/bin` > `sites/$ENV_SITE/bin` > `schedule
 | `sqls` | list my jobs with their working directories |
 | `sqdir <id\|name>` | print a job's working directory |
 | `sqcd <id\|name>` / `ficd` | cd into a job's working directory |
-| `hpc-summary [-n] [partition\|queue ...]` | nodes and running/queued jobs per partition (Slurm) or queue (PBS); defaults come from `$HPC_SUMMARY_PARTITIONS` / `$HPC_SUMMARY_QUEUES`, `-n` (PBS) skips the slow node count. Alias: `node-summary` |
+| `hpc-summary` / `node-summary` | how busy the machine is (below) |
 | `ifsubmited` / `ifdirrunning` | is a job running from this directory (or below it)? |
 | `reset` | CONTCAR→POSCAR, then resubmit with `$ENV_SUBMIT_CMD` (copies `$ENV_SUBMIT_TEMPLATE` if there's no submit script here) |
 | `rma` / `rma -a` | delete VASP outputs (`-a` deletes the inputs too) |
+
+PBS only: `pbsjobs [-x] [ids]` prints my jobs as tab-separated `id name state queue nodes walltime workdir` (`-x` includes finished jobs). The other PBS commands build on it.
+
+### `hpc-summary`
+
+```
+hpc-summary [-n] [partition|queue ...]
+```
+
+- **Slurm:** one row per partition with total, allocated, idle and other nodes, plus running and pending jobs and the nodes they use. The TOTAL row adds up jobs only, because partitions share nodes.
+- **PBS:** a node count (busy, free, down), then running, queued and held jobs per queue. `-n` skips the node count, which takes about 15 s on Aurora.
+- With no names it uses the site's `$HPC_SUMMARY_PARTITIONS` / `$HPC_SUMMARY_QUEUES`. If neither is set, it shows everything.
+
+```
+Nodes: 10624 total, 10408 busy, 128 free, 88 down/offline, 0 other
+
+QUEUE              RUN_JOBS RUN_NODES   Q_JOBS   Q_NODES     HELD
+debug                    18        22        5         7        2
+prod                      0         0       95    169504        0
+small                     5      2368       71     30017       11
+```
+
+### Notes
+
+- **Aurora:** `sq` can take 1–7 s. The time is spent waiting on the shared PBS server, not on the script, so avoid polling it in a loop (`watch sq`).
+- `dire2cart.py` and `entropy.py` are still Python 2. `sum_dos_*` need `ksh`.
 
 ## Adding a new machine
 
